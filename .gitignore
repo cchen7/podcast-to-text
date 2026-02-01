@@ -1,0 +1,31 @@
+# Podcast-to-Text
+
+# Dependencies
+*.pyc
+__pycache__/
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Project specific
+data/
+output/
+.dev/
+
+# Logs
+*.log

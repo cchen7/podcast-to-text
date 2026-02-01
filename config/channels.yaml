@@ -1,0 +1,6 @@
+channels:
+  # Example configuration - replace with your podcasts
+  - name: "example-podcast"
+    url: "https://example.com/feed.xml"
+    language: "en-US"
+    max_episodes: 5
