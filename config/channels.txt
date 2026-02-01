@@ -1,0 +1,5 @@
+# Podcast RSS feeds - one URL per line
+# Lines starting with # are comments
+# Example:
+# https://example.com/podcast1/feed.xml
+# https://example.com/podcast2/feed.xml

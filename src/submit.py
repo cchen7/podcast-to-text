@@ -18,7 +18,7 @@ import feedparser
 
 from rss_parser import parse_feed
 from db import Database
-from utils import load_config
+from utils import load_feeds
 
 # 配置日志
 logging.basicConfig(
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # 项目根目录
 ROOT_DIR = Path(__file__).parent.parent
-CONFIG_PATH = ROOT_DIR / 'config' / 'channels.yaml'
+CONFIG_PATH = ROOT_DIR / 'config' / 'channels.txt'
 DB_PATH = ROOT_DIR / 'data' / 'podcast.db'
 
 
@@ -143,53 +143,58 @@ def process_config_file(speech_key: str, speech_region: str, db: Database) -> tu
         logger.error(f"Config file not found: {CONFIG_PATH}")
         return 0, 0
     
-    channels = load_config(str(CONFIG_PATH))
-    logger.info(f"Loaded {len(channels)} channels from config")
+    feeds = load_feeds(str(CONFIG_PATH))
+    logger.info(f"Loaded {len(feeds)} feeds from config")
     
     submitted = 0
     skipped = 0
     
-    for channel in channels:
-        logger.info(f"\n=== Channel: {channel.name} ===")
+    for url in feeds:
+        # 自动提取频道名
+        channel_name = get_channel_name_from_rss(url)
+        logger.info(f"\n=== Feed: {channel_name} ===")
         
         try:
-            episodes = parse_feed(channel.url, channel.max_episodes)
-            logger.info(f"Found {len(episodes)} episodes")
+            episodes = parse_feed(url, max_episodes=1)  # 只取最新一集
+            if not episodes:
+                logger.warning(f"No episodes found for {url}")
+                continue
+                
+            episode = episodes[0]
             
-            for episode in episodes:
-                if db.is_processed(episode.id, channel.name):
-                    logger.info(f"Skipping (done): {episode.title[:40]}...")
-                    skipped += 1
-                    continue
+            if db.is_processed(episode.id, channel_name):
+                logger.info(f"Skipping (done): {episode.title[:40]}...")
+                skipped += 1
+                continue
+            
+            if db.is_pending(episode.id, channel_name):
+                logger.info(f"Skipping (pending): {episode.title[:40]}...")
+                skipped += 1
+                continue
+            
+            try:
+                transcription_id = submit_transcription(
+                    episode.audio_url, "auto", speech_key, speech_region
+                )
                 
-                if db.is_pending(episode.id, channel.name):
-                    logger.info(f"Skipping (pending): {episode.title[:40]}...")
-                    skipped += 1
-                    continue
+                db.mark_pending(
+                    episode_id=episode.id,
+                    channel=channel_name,
+                    title=episode.title,
+                    audio_url=episode.audio_url,
+                    transcription_id=transcription_id,
+                    published=episode.published,
+                    duration=episode.duration
+                )
                 
-                try:
-                    transcription_id = submit_transcription(
-                        episode.audio_url, channel.language, speech_key, speech_region
-                    )
-                    
-                    db.mark_pending(
-                        episode_id=episode.id,
-                        channel=channel.name,
-                        title=episode.title,
-                        audio_url=episode.audio_url,
-                        transcription_id=transcription_id,
-                        published=episode.published,
-                        duration=episode.duration
-                    )
-                    
-                    logger.info(f"Submitted: {episode.title[:40]}... -> {transcription_id}")
-                    submitted += 1
-                    
-                except Exception as e:
-                    logger.error(f"Failed: {e}")
-                    
+                logger.info(f"Submitted: {episode.title[:40]}... -> {transcription_id}")
+                submitted += 1
+                
+            except Exception as e:
+                logger.error(f"Failed: {e}")
+                
         except Exception as e:
-            logger.error(f"Error processing channel: {e}")
+            logger.error(f"Error processing feed: {e}")
     
     return submitted, skipped
 

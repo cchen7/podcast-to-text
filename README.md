@@ -84,14 +84,15 @@ python src/query.py --list
 
 ## Configuration
 
-### channels.yaml (for batch mode)
+### channels.txt (for batch mode)
 
-```yaml
-channels:
-  - name: "nopriors"
-    url: "https://example.com/podcast-feed.xml"
-    language: "en-US"
-    max_episodes: 5
+Simple format - one RSS URL per line:
+
+```
+# Lines starting with # are comments
+https://example.com/podcast1/feed.xml
+https://example.com/podcast2/feed.xml
+https://example.com/podcast3/feed.xml
 ```
 
 ### Environment Variables
@@ -249,4 +250,4 @@ Common regions for Speech Services:
 
 ## License
 
-MIT
+Apache License 2.0 - See [LICENSE](LICENSE) file for details.

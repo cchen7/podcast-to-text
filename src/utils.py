@@ -2,44 +2,29 @@
 
 import os
 import re
-import yaml
 from pathlib import Path
 from typing import List, Dict, Any
 from dataclasses import dataclass
 
 
-@dataclass
-class ChannelConfig:
-    """频道配置"""
-    name: str
-    url: str
-    language: str = "zh-CN"
-    max_episodes: int = 10
-
-
-def load_config(config_path: str) -> List[ChannelConfig]:
+def load_feeds(config_path: str) -> List[str]:
     """
-    加载频道配置文件
+    加载RSS订阅列表 - 一行一个URL
     
     Args:
         config_path: 配置文件路径
         
     Returns:
-        ChannelConfig列表
+        URL列表
     """
+    feeds = []
     with open(config_path, 'r', encoding='utf-8') as f:
-        data = yaml.safe_load(f)
-    
-    channels = []
-    for ch in data.get('channels', []):
-        channels.append(ChannelConfig(
-            name=ch['name'],
-            url=ch['url'],
-            language=ch.get('language', 'zh-CN'),
-            max_episodes=ch.get('max_episodes', 10)
-        ))
-    
-    return channels
+        for line in f:
+            line = line.strip()
+            # 跳过空行和注释
+            if line and not line.startswith('#'):
+                feeds.append(line)
+    return feeds
 
 
 def sanitize_filename(name: str) -> str:
