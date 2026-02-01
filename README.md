@@ -42,7 +42,7 @@ cp .env.example .env
 
 ```bash
 # Single RSS feed (auto-detect channel name)
-python src/submit.py https://feeds.megaphone.fm/nopriors
+python src/submit.py https://example.com/podcast-feed.xml
 
 # With custom channel name and language
 python src/submit.py https://example.com/feed.xml --name my-podcast --lang zh-CN
@@ -72,7 +72,7 @@ python src/query.py --list
 |----------|-------------|
 | `url` | RSS feed URL (positional) |
 | `--name, -n` | Channel name (auto-detected if not specified) |
-| `--lang, -l` | Language code (default: en-US) |
+| `--lang, -l` | Language code (default: auto). Use `auto` for automatic detection, or specify like `en-US`, `zh-CN` |
 | `--config, -c` | Read from config/channels.yaml |
 
 ### query.py - Query Results
@@ -89,7 +89,7 @@ python src/query.py --list
 ```yaml
 channels:
   - name: "nopriors"
-    url: "https://feeds.megaphone.fm/nopriors"
+    url: "https://example.com/podcast-feed.xml"
     language: "en-US"
     max_episodes: 5
 ```
@@ -150,7 +150,7 @@ output/
 
 ```bash
 # Submit multiple podcasts
-python src/submit.py https://feeds.megaphone.fm/nopriors
+python src/submit.py https://example.com/podcast-feed.xml
 python src/submit.py https://example.com/tech-podcast.xml --name tech-pod
 
 # Check status periodically

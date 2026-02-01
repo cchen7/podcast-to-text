@@ -57,16 +57,26 @@ def submit_transcription(audio_url: str, language: str, speech_key: str, speech_
         "Content-Type": "application/json"
     }
     
+    properties = {
+        "wordLevelTimestampsEnabled": True,
+        "punctuationMode": "DictatedAndAutomatic",
+        "profanityFilterMode": "None"
+    }
+    
     payload = {
         "contentUrls": [audio_url],
-        "locale": language,
         "displayName": f"podcast-{int(time.time())}",
-        "properties": {
-            "wordLevelTimestampsEnabled": True,
-            "punctuationMode": "DictatedAndAutomatic",
-            "profanityFilterMode": "None"
-        }
+        "properties": properties
     }
+    
+    # Use auto language detection if language is "auto", otherwise specify locale
+    if language and language.lower() != "auto":
+        payload["locale"] = language
+    else:
+        # Enable automatic language identification
+        properties["languageIdentification"] = {
+            "candidateLocales": ["en-US", "zh-CN", "ja-JP", "ko-KR", "de-DE", "fr-FR", "es-ES"]
+        }
     
     response = requests.post(
         f"{base_url}/speechtotext/v3.1/transcriptions",
@@ -189,14 +199,15 @@ def main():
         description='Submit podcast transcription tasks',
         epilog='''
 Examples:
-  python submit.py https://feeds.megaphone.fm/nopriors
+  python submit.py https://example.com/feed.xml
   python submit.py https://example.com/feed.xml --name my-podcast --lang zh-CN
+  python submit.py https://example.com/feed.xml --lang auto
   python submit.py --config
         '''
     )
     parser.add_argument('url', nargs='?', help='RSS feed URL')
     parser.add_argument('--name', '-n', help='Channel name (auto-detected if not specified)')
-    parser.add_argument('--lang', '-l', default='en-US', help='Language code (default: en-US)')
+    parser.add_argument('--lang', '-l', default='auto', help='Language code (default: auto). Use "auto" for automatic detection, or specify like en-US, zh-CN')
     parser.add_argument('--config', '-c', action='store_true', help='Read from config file')
     
     args = parser.parse_args()
